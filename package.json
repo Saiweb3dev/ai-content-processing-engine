@@ -18,6 +18,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@google/genai": "^1.0.0",
     "axios": "^1.10.0",
     "bcryptjs": "^3.0.2",
     "bull": "^4.16.5",
@@ -49,5 +50,6 @@
     "swagger-ui-express": "^5.0.1",
     "uuid": "^11.1.0",
     "winston": "^3.17.0"
-  }
+  },
+  "type": "module"
 }
