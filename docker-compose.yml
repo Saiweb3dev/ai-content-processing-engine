@@ -5,6 +5,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    volumes:
+      - .:/app                    # Mount current directory to /app in container
+      - /app/node_modules         # Prevent overwriting node_modules
+      - ./logs:/app/logs
     container_name: ai-content-processor
     restart: unless-stopped
     ports:
@@ -21,9 +25,9 @@ services:
       - DB_USER=postgres
       - DB_PASSWORD=postgres_password
       - REDIS_URL=redis://redis:6379
+      - CACHE_TTL=3600
+      - CACHE_ENABLED=true
       - LOG_LEVEL=info
-    volumes:
-      - ./logs:/app/logs
     networks:
       - app-network
 
@@ -40,7 +44,7 @@ services:
       - postgres-data:/data/postgres
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     ports:
-      - "5432:5432"
+      - "5433:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -73,3 +77,4 @@ networks:
 volumes:
   postgres-data:
   redis-data:
+  
