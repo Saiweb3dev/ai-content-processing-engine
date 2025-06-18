@@ -1,5 +1,3 @@
-const { GoogleGenAI } = require("@google/genai");
-const crypto = require("crypto");
 const { logger } = require("../config/logger");
 const { cacheService } = require("./cache.service");
 
@@ -9,9 +7,45 @@ class AIService {
       throw new Error("GOOGLE AI environment variable is required");
     }
 
-    this.googleGenAI = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
-    this.model = this.googleGenAI.models;
     this.cacheTimeout = 3600; // 1 hour cache
+    this.modelName = process.env.GOOGLE_MODEL || "gemini-1.5-pro";
+    this.initialized = false;
+
+    // Initialize the client asynchronously
+    this.init();
+  }
+
+  /**
+   * Initialize Google GenAI client
+   */
+  async init() {
+    try {
+      // Dynamic import of Google GenAI
+      const { GoogleGenAI } = await import("@google/genai");
+      this.googleGenAI = new GoogleGenAI({
+        apiKey: process.env.GOOGLE_API_KEY,
+      });
+      this.model = this.googleGenAI.models;
+      this.initialized = true;
+      logger.info("Google GenAI client initialized successfully");
+    } catch (error) {
+      logger.error("Failed to initialize Google GenAI client", {
+        error: error.message,
+      });
+      this.initialized = false;
+    }
+  }
+
+  /**
+   * Ensure the client is initialized before using
+   */
+  async ensureInitialized() {
+    if (!this.initialized) {
+      await this.init();
+      if (!this.initialized) {
+        throw new Error("Failed to initialize Google GenAI client");
+      }
+    }
   }
 
   /**
@@ -106,7 +140,7 @@ class AIService {
       contents: prompt,
     });
 
-    const summary = response.text();
+    const summary = response.text;
 
     return {
       type: "summarize",
@@ -126,40 +160,36 @@ class AIService {
    * @returns {Promise<Object>} Sentiment analysis result
    */
   async analyzeSentiment(content) {
+    await this.ensureInitialized();
+
     const prompt = `You are a sentiment analysis expert. Analyze the sentiment of the given text and provide:
-    1. Overall sentiment (positive, negative, neutral)
-    2. Confidence score (0-10)
-    3. Key emotional indicators
-    4. Brief explanation
+  1. Overall sentiment (positive, negative, neutral)
+  2. Confidence score (0-10)
+  3. Key emotional indicators
+  4. Brief explanation
 
-    Respond in JSON format only
+  Respond in JSON format only
 
-    Text to analyze:
-    ${content}.`;
-    const response = await this.model.generateContent({
-      model: "gemini-2.0-flash",
-      contents: prompt,
-    });
-
-    const result = response.text();
+  Text to analyze:
+  ${content}.`;
 
     try {
-      sentimentData = JSON.parse(result);
-    } catch {
-      // Fallback if JSON parsing fails
-      sentimentData = {
-        sentiment: "neutral",
-        confidence: 0.5,
-        emotions: [],
-        explanation: "Unable to parse sentiment analysis",
-      };
-    }
+      const response = await this.model.generateContent({
+        model: "gemini-2.0-flash",
+        contents: prompt,
+      });
 
-    return {
-      type: "analyze-sentiment",
-      result: sentimentData,
-      processingTime: Date.now(),
-    };
+      const result = response.text;
+
+      return {
+        type: "analyze-sentiment",
+        result: result,
+        processingTime: Date.now(),
+      };
+    } catch (error) {
+      logger.error("Sentiment analysis failed", { error: error.message });
+      throw error;
+    }
   }
 
   async extractKeywords(content) {
@@ -172,7 +202,7 @@ class AIService {
       contents: prompt,
     });
 
-    const response = result.text();
+    const response = result.text;
 
     let keywords;
 
@@ -184,7 +214,7 @@ class AIService {
 
     return {
       type: "extract-keywords",
-      result: { keywords },
+      result: { response },
       processingTime: Date.now(),
     };
   }
@@ -210,7 +240,9 @@ class AIService {
       generationConfig,
     });
 
-    const generatedContent = result.text();
+    console.log(result);
+
+    const generatedContent = result.text;
 
     return {
       type: "generate-content",
@@ -243,7 +275,7 @@ class AIService {
       contents: prompt,
     });
 
-    const translatedText = result.text();
+    const translatedText = result.text;
 
     return {
       type: "translate",
@@ -330,4 +362,4 @@ class AIService {
   }
 }
 
-export const aiService = new AIService();
+module.exports.aiService = new AIService();
