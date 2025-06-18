@@ -14,8 +14,8 @@ const { logger } = require('./config/logger');
 const { swaggerSpec, swaggerUi } = require('./config/swagger');
 
 // Import routes
-const authRoutes = require('./routes/auth.routes');
-const contentRoutes = require('./routes/content.routes');
+// const authRoutes = require('./routes/auth.routes');
+// const contentRoutes = require('./routes/content.routes');
 const aiRoutes = require('./routes/ai.routes');
 
 // Import middleware
@@ -34,6 +34,12 @@ class App {
   }
 
   initializeMiddleware() {
+
+  // Parse JSON bodies
+  this.app.use(express.json({ limit: '10mb' }));
+  // Parse URL-encoded bodies
+  this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
     // Security middleware
     this.app.use(
       helmet({
@@ -99,7 +105,7 @@ class App {
       morgan(morganFormat, {
         stream: {
           write: (message) => {
-            loggers.info(message.trim());
+            logger.info(message.trim());
           },
         },
       })
@@ -111,8 +117,7 @@ class App {
 
   initializeRoutes() {
     // Health check endpoint
-    this.app,
-      get("/health", (req, res) => {
+    this.app.get("/health", (req, res) => {
         res.status(200).json({
           status: "OK",
           timestamp: new Date().toISOString(),
@@ -126,14 +131,14 @@ class App {
     this.app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
     // API routes
-    this.app.use("/api/auth", authRoutes);
-    this.app.use("/api/content", contentRoutes);
+    // this.app.use("/api/auth", authRoutes);
+    // this.app.use("/api/content", contentRoutes);
     this.app.use("/api/ai", aiRoutes);
 
     // Root endpoint
     this.app.get("/", (req, res) => {
       res.json({
-        message: "AI Content Processing Service",
+        message: "AI changed Content Processing Service",
         version: process.env.npm_package_version || "1.0.0",
         documentation: "/api-docs",
         health: "/health",
@@ -141,7 +146,7 @@ class App {
     });
   }
 
-  intializeErrorHandling() {
+  initializeErrorHandling() {
     // 404 handler
     this.app.use(notFound);
 
@@ -151,11 +156,11 @@ class App {
 
   async initializeDatabase() {
     try {
-      await config.connectDb();
+      await config.connectDB();
       await connectRedis();
-      loggers.info("Database connections established");
+      logger.info("Database connections established");
     } catch (error) {
-      loggers.error("Database connection failed", error);
+      logger.error("Database connection failed", error);
       process.exit(1);
     }
   }
