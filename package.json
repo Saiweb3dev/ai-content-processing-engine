@@ -11,7 +11,8 @@
     "lint": "eslint src/**/*.js",
     "lint:fix": "eslint src/**/*.js --fix",
     "docker:build": "docker build -t ai-content-processor .",
-    "docker:run": "docker run -p 3000:3000 ai-content-processor"
+    "docker:run": "docker run -p 3000:3000 ai-content-processor",
+    "test:cache": "node src/tests/cache.test.js"
   },
   "keywords": [],
   "author": "",
@@ -50,6 +51,5 @@
     "swagger-ui-express": "^5.0.1",
     "uuid": "^11.1.0",
     "winston": "^3.17.0"
-  },
-  "type": "module"
+  }
 }
