@@ -1,6 +1,6 @@
 const { logger } = require("../config/logger");
 const { cacheService } = require("./cache.service");
-
+const { formatResponse } = require("../utils/ai.utils");
 class AIService {
   constructor() {
     if (!process.env.GOOGLE_API_KEY) {
@@ -179,7 +179,7 @@ class AIService {
         contents: prompt,
       });
 
-      const result = response.text;
+      const result = formatResponse(response.text);
 
       return {
         type: "analyze-sentiment",
@@ -202,7 +202,7 @@ class AIService {
       contents: prompt,
     });
 
-    const response = result.text;
+    const response = formatResponse(result.text);
 
     let keywords;
 

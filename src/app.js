@@ -138,7 +138,7 @@ class App {
     // Root endpoint
     this.app.get("/", (req, res) => {
       res.json({
-        message: "AI changed Content Processing Service",
+        message: "AI Content Processing Service",
         version: process.env.npm_package_version || "1.0.0",
         documentation: "/api-docs",
         health: "/health",

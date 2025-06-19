@@ -10,12 +10,6 @@ class AIController {
     try {
       const { type, content, options } = req.body;
 
-      if (!options) {
-        return res.status(StatusCodes.BAD_REQUEST).json({
-          message: "Options is required fields",
-        });
-      }
-
       if (!type || !content) {
         return res.status(StatusCodes.BAD_REQUEST).json({
           message: "Type and content are required fields",
