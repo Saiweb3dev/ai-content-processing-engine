@@ -4,11 +4,10 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     volumes:
-      - .:/app                    # Mount current directory to /app in container
-      - /app/node_modules         # Prevent overwriting node_modules
-      - ./logs:/app/logs
+      - ./:/app                   # Mount current directory to /app in container
+      - /app/node_modules         # Prevent overwriting node_modules with a named volume
     container_name: ai-content-processor
     restart: unless-stopped
     ports:
@@ -17,7 +16,7 @@ services:
       - postgres
       - redis
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
       - PORT=3000
       - DB_HOST=postgres
       - DB_PORT=5432
@@ -27,7 +26,8 @@ services:
       - REDIS_URL=redis://redis:6379
       - CACHE_TTL=3600
       - CACHE_ENABLED=true
-      - LOG_LEVEL=info
+      - LOG_LEVEL=debug
+    command: npm run dev
     networks:
       - app-network
 
@@ -77,4 +77,4 @@ networks:
 volumes:
   postgres-data:
   redis-data:
-  
+  node_modules:
